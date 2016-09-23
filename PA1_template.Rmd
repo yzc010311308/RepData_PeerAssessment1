@@ -53,6 +53,7 @@ median(finalsteps$steps)
 ```
 
 ##Are there any differences in activity patterns between weekdays and weekends
+```{r}
 finaldata$day <- as.factor(weekdays(finaldata$date))
 finaldata$isweekday <- ifelse(!(finaldata$day %in% c("Saturday", "Sunday")), TRUE, FLASE)
 weekdaysdata <- finaldata[finaldata$isweekday,]
@@ -66,3 +67,5 @@ stepsperintervalweekends$day <- "Weekend"
 weekdata <- rbind(stepsperintervalweekends, stepsperintervalweekdays)
 weekdata$day <- as.factor(weekdata$day)
 xyplot(average_steps ~  interval | day, data = weekdata, layout = c(1,2), type ="l", ylab="Number of Steps")
+```
+
