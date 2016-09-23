@@ -1,25 +1,68 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+R markdown project
+=====================================
+Instruction
+It is now possible to collect a large amount of data about personal movement using activity monitoring devices such as a Fitbit, Nike Fuelband, or Jawbone Up. These type of devices are part of the ???quantified self??? movement ??? a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. But these data remain under-utilized both because the raw data are hard to obtain and there is a lack of statistical methods and software for processing and interpreting the data.
 
+##Loading and preprocessing the data
+```{r}
+if(!file.exists("Activity monitoring data.zip")){
+  temp<- tempfile() 
+  download.file("https://d396qusza40orc.cloudfront.net/repdata/data/activity.zip",temp)
+  unzip(temp)
+  unlink(temp)
+}
+activity <- read.csv("activity.csv")
+activity$interval <- factor(data$interval)
+naindex <- is.na(as.character(activity$steps))
+actnona<- activity[!naindex,]
+head(actnona)
+stepsfordays <- aggregate(steps~date, data=actnona, sum)
+head(stepsfordays)
+```
 
-## Loading and preprocessing the data
+##What is mean total number of steps taken per day?
+```{r}
+hist(stepsfordays$steps, breaks=20, col="red", xlab="Steps", main="Total number of steps")
+mean(stepsfordays$steps)
+median(stepsfordays$steps)
+```
 
+##What is the average daily activity pattern?
+```{r}
+stepsperinterval <- aggregate(actnona$steps, by=list(interval=actnona$interval), FUN= mean)
+colnames(stepsperinterval) <- c("interval", "avgsteps")
+plot(stepsperinterval$interval, stepsperinterval$avgsteps, type="l", 
+     xlab="Interval", ylab="steps", main="average daily pattern", col="orange")
+maxsteps <- max(stepsperinterval$avgsteps)
+maxinterval <- stepsperinterval[which.max(stepsperinterval$avgsteps),]$interval
+maxinterval
+```
 
+##Imputing missing values
+```{r}
+naindex1 <- which(is.na(as.character(activity$steps)))
+finaldata <- activity
+finaldata[naindex1,]$steps <- unlist(lapply(naindex1, FUN=function(naindex1){
+  stepsperinterval[activity[naindex1,]$interval==stepsperinterval$interval,]$avgsteps
+}))
+finalsteps <- aggregate(steps~date, data=finandata, sum)
+hist(as.numeric(finalsteps$steps), breaks = 20, col="red", xlab="Number of Steps", main="Histogram of the total number
+     of steps taken each day")
+mean(finalsteps$steps)
+median(finalsteps$steps)
+```
 
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+##Are there any differences in activity patterns between weekdays and weekends
+finaldata$day <- as.factor(weekdays(finaldata$date))
+finaldata$isweekday <- ifelse(!(finaldata$day %in% c("Saturday", "Sunday")), TRUE, FLASE)
+weekdaysdata <- finaldata[finaldata$isweekday,]
+stepsperinverval-weekdays <- aggregate(weekdaysdata$steps, by=list(interval=weekdaysdata$interval),fun=mean)
+weekendsdata <- finaldata[!finaldata$isweekday,]
+stepsperinterval-weekends <- aggregate(weekendsdata$steps, by=list(interval=weekendsdata$interval), fun=mean)
+colnames(stepsperintervalweekdays) <- c("interval", "average_steps")
+colnames(stepsperintervalweekends) <- c("interval", "average_steps")
+stepsperintervalweekdays$day <- "Weekday"
+stepsperintervalweekends$day <- "Weekend"
+weekdata <- rbind(stepsperintervalweekends, stepsperintervalweekdays)
+weekdata$day <- as.factor(weekdata$day)
+xyplot(average_steps ~  interval | day, data = weekdata, layout = c(1,2), type ="l", ylab="Number of Steps")
